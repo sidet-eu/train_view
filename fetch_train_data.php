@@ -43,7 +43,7 @@ function fetchData($cookie) {
 }
 
 function logMessage($message) {
-    $logFile = 'logs.txt';
+    $logFile = '/var/www/sideteu/projects/vlaciky/logs.txt';
     $timestamp = date('Y-m-d H:i:s');
     file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
 }
@@ -66,15 +66,38 @@ function saveToDatabase($data) {
         logMessage("Prepare Error: " . $mysqli->error);
         die("Prepare Error: " . $mysqli->error);
     }
-
+    $count = 0;
     foreach ($data as $train) {
         // Extract each value into separate variables
         $stanicaZ = $train['StanicaZCislo'] ?? null;
         $stanicaDo = $train['StanicaDoCislo'] ?? null;
-        $nazov = $train['Nazov'] ?? null;
-        $typVlaku = $train['TypVlaku'] ?? null;
+        if (($train['TypVlaku'] === 'Ex') && isset($train['CisloVlaku']) && (substr($train['CisloVlaku'], 0, 1) === '1' || substr($train['CisloVlaku'], 0, 1) === '2') ||in_array($train['CisloVlaku'], ['442', '443', '476', '477'])) {
+            if(in_array($train['CisloVlaku'], ["1003", "1008", "1011", "1012", "1020", "1021", "1041", "1043", "1044", "1045", "1046", "1047", "1048", "1050", "1222", "1223"])) {
+                $typVlaku = 'RJ';
+                if (isset($train['Nazov'])) {
+                    $train['Nazov'] = preg_replace('/Ex/', 'RJ', $train['Nazov'], 1);
+                }
+            } elseif(in_array($train['CisloVlaku'], ['442', '443', '476', '477'])) {
+                $typVlaku = 'EN';
+                if (isset($train['Nazov'])) {
+                    $train['Nazov'] = preg_replace('/Ex/', 'EN', $train['Nazov'], 1);
+                }
+            } else {
+                if (isset($train['Nazov'])) {
+                    $train['Nazov'] = preg_replace('/Ex/', 'EC', $train['Nazov'], 1);
+                }
+                $typVlaku = 'EC';
+            }
+            $nazov = $train['Nazov'];
+        } else {
+            $typVlaku = $train['TypVlaku'];
+            $nazov = $train['Nazov'];
+        }
         $cisloVlaku = $train['CisloVlaku'] ?? null;
         $nazovVlaku = $train['NazovVlaku'] ?? null;
+        if($typVlaku === 'RJ') {
+            $nazovVlaku = "RegioJet";
+        }
         $popis = $train['Popis'] ?? null;
         $meska = $train['Meska'] ?? null;
         $dopravca = $train['Dopravca'] ?? null;
@@ -97,7 +120,7 @@ function saveToDatabase($data) {
         );
 
         if ($stmt->execute()) {
-            logMessage("Insert OK for train: " . json_encode($train));
+            $count++;
         } else {
             logMessage("Insert Error for train: " . json_encode($train) . " - Error: " . $stmt->error);
         }
@@ -105,7 +128,7 @@ function saveToDatabase($data) {
 
     $stmt->close();
     $mysqli->close();
-
+    logMessage("Inserted $count records into the database.");
     echo "Data saved to the database successfully.\n";
 }
 

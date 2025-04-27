@@ -21,7 +21,7 @@ if (isset($_SESSION["user_id"]) && $_SESSION["user_id"] != "") {
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <title>Train Viewer</title>
+    <title>Train View | sidet.eu</title>
 </head>
 <body onload="updateTrainTable()">
     <?php if (isset($_SESSION['user_id'])): $user = getUserData($_SESSION["user_id"]);?>
@@ -32,8 +32,7 @@ if (isset($_SESSION["user_id"]) && $_SESSION["user_id"] != "") {
         <button class="sso-login" onclick="login()">Login</button><br>
     <?php endif; ?>
     <div class="search-bar">
-        <input type="text" placeholder="Search... (NOT YET IMPLEMENTED!)" disabled>
-        <button type="submit"><i class="fas fa-search"></i></button>
+        <input type="text" name="search" id="search" placeholder="Search...">
     </div>
     <br>
     <div id="trains" class="main">
